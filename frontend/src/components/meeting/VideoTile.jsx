@@ -1,5 +1,9 @@
 import { useEffect, useRef } from "react";
-import { UserIcon, VideoOffIcon, MicOffIcon } from "lucide-react";
+import {
+  UserIcon,
+  VideoOffIcon,
+  MicOffIcon,
+} from "lucide-react";
 
 const VideoTile = ({
   stream,
@@ -19,6 +23,7 @@ const VideoTile = ({
   return (
     <div className="relative w-full h-full min-h-50 bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 flex items-center justify-center group">
 
+      {/* Video */}
       <video
         ref={videoRef}
         autoPlay
@@ -31,10 +36,15 @@ const VideoTile = ({
         } ${isLocal ? "-scale-x-100" : ""}`}
       />
 
+      {/* Camera Off */}
       {!videoEnabled && (
         <div className="flex flex-col items-center justify-center space-y-3 z-10">
           <div className="w-20 h-20 rounded-full bg-indigo-600/20 border-2 border-indigo-400/40 flex items-center justify-center text-indigo-300 text-2xl font-bold uppercase shadow-inner">
-            {name ? name.charAt(0) : <UserIcon className="w-8 h-8" />}
+            {name ? (
+              name.charAt(0).toUpperCase()
+            ) : (
+              <UserIcon className="w-8 h-8" />
+            )}
           </div>
 
           <span className="text-xs font-semibold px-3 py-1 rounded-full bg-slate-800/90 text-slate-300 border border-slate-700/60 flex items-center gap-1.5">
@@ -44,10 +54,11 @@ const VideoTile = ({
         </div>
       )}
 
+      {/* Name + Mic status */}
       <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between z-20 pointer-events-none">
         <div className="flex items-center gap-2 bg-slate-900/80 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/20 text-xs font-medium text-white shadow-md">
           <span>
-            {name}
+            {name || "Participant"}
             {isLocal ? " (You)" : ""}
           </span>
 

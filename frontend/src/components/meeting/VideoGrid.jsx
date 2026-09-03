@@ -10,11 +10,18 @@ const VideoGrid = ({
   const totalParticipants = 1 + remoteUsers.length;
 
   const getGridClass = () => {
-    if (totalParticipants === 1) return "grid-cols-1 max-w-4xl";
-    if (totalParticipants <= 4)
+    if (totalParticipants === 1) {
+      return "grid-cols-1 max-w-4xl";
+    }
+
+    if (totalParticipants <= 4) {
       return "grid-cols-1 md:grid-cols-2 max-w-5xl";
-    if (totalParticipants <= 6)
+    }
+
+    if (totalParticipants <= 6) {
       return "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 max-w-7xl";
+    }
+
     return "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 max-w-7xl";
   };
 
@@ -23,21 +30,21 @@ const VideoGrid = ({
       <div
         className={`w-full grid gap-4 ${getGridClass()} aspect-video max-h-[calc(100vh-140px)] transition-all duration-300`}
       >
-        {/* video tile */}
+        {/* Local User */}
         <VideoTile
           stream={localStream}
-          name={localUser?.name || "You"}
+          name={localUser?.name || localUser?.fullName || "You"}
           isLocal={true}
           audioEnabled={audioEnabled}
           videoEnabled={videoEnabled}
         />
-         
-         {/* remote users */}
+
+        {/* Remote Users */}
         {remoteUsers.map((user) => (
           <VideoTile
-            key={user.socketId}
+            key={user.socketId || user.userId}
             stream={user.stream}
-            name={user.name}
+            name={user.userName || user.name || "Participant"}
             audioEnabled={user.audioEnabled}
             videoEnabled={user.videoEnabled}
           />
