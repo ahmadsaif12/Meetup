@@ -58,8 +58,8 @@ const Dashboard = () => {
         {/* Left */}
         <div className="lg:col-span-7 space-y-6">
           <div className="flex items-center gap-2 text-sm text-slate-600">
-            <ShieldCheck size={16} />
-            <span>Secure Peer-to-Peer Encryption</span>
+            <ShieldCheck size={19} />
+            <span className='inline-flex items-center px-4 py-2 rounded-full bg-blue-50 border border-blue-100 text-slate-800 text-sm font-semibold shadow-sm'>Secure Peer-to-Peer Encryption</span>
           </div>
 
           <h1 className="text-4xl sm:text-5xl font-bold text-slate-900 leading-tight">
