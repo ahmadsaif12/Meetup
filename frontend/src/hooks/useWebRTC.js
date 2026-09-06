@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { dummyRemoteParticipants } from "../assets/asset";
-import { Mic, MicOff, Video, VideoOff } from "lucide-react";
 import { toast } from "react-hot-toast";
 
 const useWebRTC = (_roomId, user, _onMeetingEnded, _enabled = true) => {
@@ -11,31 +10,69 @@ const useWebRTC = (_roomId, user, _onMeetingEnded, _enabled = true) => {
 
   const localStreamRef = useRef(null);
 
+  const stopStream = useCallback(() => {
+    localStreamRef.current?.getTracks().forEach((track) => track.stop());
+    localStreamRef.current = null;
+  }, []);
+
   const initialLocalStream = useCallback(async () => {
-    try {
-      if (navigator?.mediaDevices?.getUserMedia) {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: true,
-          audio: true,
+    if (!navigator?.mediaDevices?.getUserMedia) return null;
+
+    const acquire = (constraints) =>
+      navigator.mediaDevices
+        .getUserMedia(constraints)
+        .catch((error) => {
+          console.log(`Failed to acquire ${constraints.video ? "camera" : ""}${constraints.audio ? " microphone" : ""}:`, error);
+          return null;
+        });
+
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      const videoStream = await acquire({ video: true });
+      if (videoStream) {
+        const stream = new MediaStream();
+        videoStream.getVideoTracks().forEach((track) => {
+          track.enabled = true;
+          stream.addTrack(track);
+        });
+
+        const audioStream = await acquire({ audio: true });
+        audioStream?.getAudioTracks().forEach((track) => {
+          track.enabled = true;
+          stream.addTrack(track);
         });
 
         localStreamRef.current = stream;
+        setVideoEnabled(true);
+        setAudioEnabled(Boolean(audioStream));
         setLocalStream(stream);
         return stream;
       }
-    } catch (error) {
-      console.log("Camera preview fallback mode");
     }
 
+    const audioStream = await acquire({ audio: true });
+    if (audioStream) {
+      const stream = new MediaStream();
+      audioStream.getAudioTracks().forEach((track) => {
+        track.enabled = true;
+        stream.addTrack(track);
+      });
+
+      localStreamRef.current = stream;
+      setVideoEnabled(false);
+      setAudioEnabled(true);
+      setLocalStream(stream);
+      return stream;
+    }
+
+    console.log("Camera preview fallback mode");
     return null;
   }, []);
 
   useEffect(() => {
     if (_enabled) initialLocalStream();
 
-    return () =>
-      localStreamRef.current?.getTracks().forEach((track) => track.stop());
-  }, [_enabled, initialLocalStream]);
+    return () => stopStream();
+  }, [_enabled, initialLocalStream, stopStream]);
 
   const toggleAudio = () => {
     const newState = !audioEnabled;

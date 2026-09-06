@@ -18,7 +18,7 @@ const VideoTile = ({
     if (videoRef.current && stream) {
       videoRef.current.srcObject = stream;
     }
-  }, [stream]);
+  }, [stream, videoEnabled]);
 
   return (
     <div className="relative w-full h-full min-h-50 bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 flex items-center justify-center group">
@@ -50,6 +50,23 @@ const VideoTile = ({
           <span className="text-xs font-semibold px-3 py-1 rounded-full bg-slate-800/90 text-slate-300 border border-slate-700/60 flex items-center gap-1.5">
             <VideoOffIcon className="w-3.5 h-3.5 text-rose-400" />
             Camera off
+          </span>
+        </div>
+      )}
+
+      {/* Camera Connecting */}
+      {videoEnabled && isLocal && !stream && (
+        <div className="flex flex-col items-center justify-center space-y-3 z-10">
+          <div className="w-20 h-20 rounded-full bg-indigo-600/20 border-2 border-indigo-400/40 flex items-center justify-center text-indigo-300 text-2xl font-bold uppercase shadow-inner">
+            {name ? (
+              name.charAt(0).toUpperCase()
+            ) : (
+              <UserIcon className="w-8 h-8" />
+            )}
+          </div>
+
+          <span className="text-xs font-semibold px-3 py-1 rounded-full bg-slate-800/90 text-slate-300 border border-slate-700/60 flex items-center gap-1.5">
+            Starting camera...
           </span>
         </div>
       )}
