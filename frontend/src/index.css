@@ -36,3 +36,32 @@
 ::-webkit-scrollbar-thumb:hover {
     background: #94a3b8;
 }
+
+/* Clerk component responsive overrides */
+.cl-internal_wdkid {
+  max-width: 100% !important;
+}
+
+@media (max-width: 400px) {
+  .cl-internal_wdkid,
+  .cl-card {
+    width: 100% !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  .cl-internal_wdkid .cl-formButtonPrimary,
+  .cl-card .cl-formButtonPrimary {
+    font-size: 14px !important;
+    padding: 10px 16px !important;
+  }
+
+  .cl-internal_wdkid .cl-formFieldInput,
+  .cl-card .cl-formFieldInput {
+    font-size: 14px !important;
+    padding: 10px 12px !important;
+  }
+}
