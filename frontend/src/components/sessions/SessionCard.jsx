@@ -40,7 +40,11 @@ const SessionCard = ({ session, onOpenDetails, onRejoin }) => {
 
       <div className="mt-1.5 flex items-center gap-1.5 text-sm text-slate-400">
         <Calendar size={14} />
-        {session.date}
+        {new Date(session.createdAt).toLocaleDateString(undefined, {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        })}
       </div>
 
       <div className="mt-4 grid grid-cols-3 gap-2">

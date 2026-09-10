@@ -1,4 +1,5 @@
-import { sql } from "./config/db.js";
+import { sql, queryWithRetry } from "./config/db.js";
+import { ensureUserExists } from "./services/userService.js";
 
 // In-memory map: socketId -> { userId, roomId, userName }
 const socketUserMap = new Map();
@@ -12,10 +13,10 @@ export function setupSocketIO(io) {
     socket.on("join-room", async ({ roomId, user, audioEnabled = true, videoEnabled = true }) => {
       try {
         // Verify meeting exists and is active in DB
-        const meetings = await sql`
+        const meetings = await queryWithRetry(() => sql`
           SELECT id, meeting_id, host_id, status
           FROM meetings WHERE meeting_id = ${roomId}
-        `;
+        `);
 
         if (meetings.length === 0) {
           socket.emit("error", { message: "Meeting not found" });
@@ -38,8 +39,10 @@ export function setupSocketIO(io) {
 
         socketUserMap.set(socket.id, { ...currentUser, roomId });
 
+        // Ensure the Clerk user has a row in our users table (FK target)
+        await ensureUserExists({ id: user.id, name: currentUser.userName });
+
         // Store which internal meeting ID this maps to for DB operations
-        currentRoomId = roomId;
         socket.meetingDbId = meeting.id;
         socket.meetingHostId = meeting.host_id;
 
@@ -169,18 +172,19 @@ export function setupSocketIO(io) {
       }
 
       try {
-        await sql`
+        // Clinical updates are idempotent — safe to retry on Neon cold-start
+        await queryWithRetry(() => sql`
           UPDATE meetings
           SET status = 'ended', ended_at = NOW(), updated_at = NOW()
           WHERE id = ${socket.meetingDbId}
-        `;
+        `);
 
         // Update all participants' left_at
-        await sql`
+        await queryWithRetry(() => sql`
           UPDATE meeting_participants
           SET left_at = NOW()
           WHERE meeting_id = ${socket.meetingDbId} AND left_at IS NULL
-        `;
+        `);
 
         io.to(currentRoomId).emit("meeting-ended", {
           meetingId: currentRoomId,
@@ -202,7 +206,6 @@ export function setupSocketIO(io) {
     //disconnects
     socket.on("disconnect", async () => {
       await handleLeave(socket, io);
-      socketUserMap.delete(socket.id);
       console.log(`[Socket] ${currentUser?.userName || socket.id} disconnected`);
     });
   });

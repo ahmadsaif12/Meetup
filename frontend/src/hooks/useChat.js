@@ -1,73 +1,60 @@
-import { useCallback, useState } from "react";
-import {
-  dummyInitialChatMessages,
-  dummySessions,
-} from "../assets/asset";
+import { useCallback, useEffect, useRef, useState } from "react";
 
-export const useChat = (roomId, user) => {
-  // Find current meeting
-  const currentSession = dummySessions.find(
-    (session) => session.meetingId === roomId
-  );
-
-  // Get messages for current meeting
-  const initialMessages =
-    currentSession?.messages?.map((message) => ({
-      ...message,
-
-      time:
-        message.time ||
-        (message.timestamp
-          ? new Date(message.timestamp).toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })
-          : ""),
-    })) || dummyInitialChatMessages;
-
-  const [messages, setMessages] = useState(initialMessages);
-
+export const useChat = (socket, user) => {
+  const [messages, setMessages] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const isChatOpenRef = useRef(false);
+  const socketRef = useRef(socket);
 
-  const [isChatOpen, setIsChatOpen] = useState(true);
+  socketRef.current = socket;
 
-  // Send message
-  const sendMessage = useCallback(
-    (text) => {
-      if (!text.trim() || !user) return;
+  useEffect(() => {
+    const s = socketRef.current;
+    if (!s) return;
 
-      const message = {
-        id: Date.now().toString(),
-        text: text.trim(),
-        senderName: user.name || user.fullName || "You",
-        senderId: user.id,
-        time: new Date().toLocaleTimeString([], {
+    const handleChatMessage = (msg) => {
+      const formatted = {
+        id: msg.id,
+        senderId: msg.senderId,
+        senderName: msg.senderName,
+        text: msg.text,
+        time: new Date(msg.timestamp).toLocaleTimeString([], {
           hour: "2-digit",
           minute: "2-digit",
         }),
       };
 
-      setMessages((prev) => [...prev, message]);
-    },
-    [user]
-  );
+      setMessages((prev) => [...prev, formatted]);
 
-  // Open / close chat
+      if (!isChatOpenRef.current && msg.senderId !== user?.id) {
+        setUnreadCount((prev) => prev + 1);
+      }
+    };
+
+    s.on("chat-message", handleChatMessage);
+    return () => s.off("chat-message", handleChatMessage);
+  }, [socket, user?.id]);
+
+  const sendMessage = useCallback((text) => {
+    if (!text.trim() || !socketRef.current) return;
+    socketRef.current.emit("chat-message", { text: text.trim() });
+  }, []);
+
   const toggleChat = useCallback(() => {
     setIsChatOpen((prev) => {
-      if (!prev) {
-        setUnreadCount(0);
-      }
-
-      return !prev;
+      const next = !prev;
+      isChatOpenRef.current = next;
+      if (next) setUnreadCount(0);
+      return next;
     });
   }, []);
 
   return {
     messages,
+    setMessages,
     sendMessage,
     unreadCount,
-    setUnreadCount,
     isChatOpen,
     setIsChatOpen,
     toggleChat,
