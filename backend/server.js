@@ -6,8 +6,12 @@ import { initDB } from "./config/db.js";
 import { clerkMiddleware } from "@clerk/express";
 import { handleClerkWebhook } from "./controllers/webhookController.js";
 import meetingRoutes from "./routes/meetingRoutes.js";
+import http from "http";
+import { Server } from "socket.io";
+import { setupSocketIO } from "./socket.js";
 
 const app = express();
+const server = http.createServer(app)
 
 // Initialize database tables
 try {
@@ -34,9 +38,20 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/meetings", meetingRoutes);
+const io = new Server(server,{
+  cors :{origin : allowedOrigins, credentials: true}
+})
 
-// Start server
+setupSocketIO(io)
+
+// Global error handler
+app.use((err, _req, res, _next) => {
+  console.error(`[Error] ${err.message}`);
+  res.status(err.status || 500).json({ error: err.message || "Internal Server Error" });
+});
+
+// Start server (use http server so Socket.IO shares the port)
 const port = process.env.PORT || 3000;
-app.listen(port, () => {
+server.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
