@@ -22,7 +22,7 @@ Meetup is a full-stack, real-time video-conferencing application with HD peer-to
 ## 📁 Project Structure
 
 ```text
-VideoConferencing/
+Meetup/
 ├── backend/                 # Express + Socket.IO server
 │   ├── config/db.js         # Neon (Postgres) client + cold-start retry helper
 │   ├── controllers/         # meetings, stats, sessions, Clerk webhooks
@@ -47,7 +47,7 @@ VideoConferencing/
 ### 1. Clone & install
 
 ```bash
-git clone <repo-url> VideoConferencing
+git clone <repo-url> Meetup
 cd VideoConferencing
 
 # backend
